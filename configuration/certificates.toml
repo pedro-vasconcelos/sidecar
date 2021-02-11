@@ -13,3 +13,9 @@
         certFile = "/certs/io.test.crt"
         keyFile = "/certs/io.test.key"
         stores = ["default"]
+
+    [[tls.certificates]]
+        # https://gist.github.com/fntlnz/cf14feb5a46b2eda428e000157447309
+        certFile = "/certs/navigatortogether.com.test.crt"
+        keyFile = "/certs/navigatortogether.com.test.key"
+        stores = ["default"]        

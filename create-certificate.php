@@ -1,12 +1,12 @@
 <?php
 
 
-/*
+
 // CreateCa
 $caPemPath = __DIR__.'/certs2/RequestCASelfSigned.pem';
 $caKeyPath = __DIR__.'/certs2/RequestCASelfSigned.key';
 $caSrlPath = __DIR__.'/certs2/RequestCASelfSigned.srl';
-
+/*
 $oName = 'Request CA Self Signed Organization';
 $cName = 'Request CA Self Signed CN';
 
