@@ -1,0 +1,10 @@
+ openssl genrsa -out rootCA.key 2048
+ openssl req -x509 -new -nodes -key rootCA.key -sha256 -days 396 -out rootCA.pem
+ 
+ openssl req -new -sha256 -nodes -out wildcard.test.csr -newkey rsa:2048 -keyout wildcard.test.key -config <( cat ./wildcard.test.cnf )
+ 
+ openssl x509 -req -in wildcard.test.csr -CA ../rootCA/rootCA.pem -CAkey ../rootCA/rootCA.key -CAcreateserial -out wildcard.test.crt -days 396 -sha256 -extfile v3.ext
+ openssl x509 -text -noout -in wildcard.test.crt 
+ 
+ https://alexanderzeitler.com/articles/Fixing-Chrome-missing_subjectAltName-selfsigned-cert-openssl/
+ https://gist.github.com/Soarez/9688998

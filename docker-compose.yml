@@ -1,0 +1,173 @@
+version: "3.7"
+
+networks:
+  development:
+    external: true
+
+# volumes:
+#   registry_data:
+
+services:
+  traefik:
+    env_file: .env
+    restart: always
+    image: "traefik:latest"
+    command: 
+      - --log.level=INFO
+      # Enable the API in insecure mode, which means that the API will be available directly on the entryPoint named traefik.
+      - --api.insecure=true
+      - --entrypoints.web.address=:80
+      - --entrypoints.websecure.address=:443
+      - --providers.docker=true
+      # Defines the path to the directory that contains the configuration files.
+      - --providers.file.directory=/configuration/
+      # Set the watch option to true to allow Traefik to automatically watch for file changes. It works with both the filename and the directory options.
+      - --providers.file.watch=true
+    networks: 
+      - development
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+      - "./certs2:/certs"
+      - "./configuration/:/configuration/"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.traefik-secure.entrypoints=websecure
+      - traefik.http.routers.traefik-secure.rule=Host(`${TRAEFIK_HOST}`)
+      - traefik.http.routers.traefik-secure.tls=true
+      - traefik.http.routers.traefik-secure.service=api@internal
+      - traefik.http.services.traefik.loadbalancer.server.port=8080
+
+      - traefik.http.routers.http_traefik.entrypoints=web
+      - traefik.http.routers.http_traefik.rule=Host(`${TRAEFIK_HOST}`)
+      - traefik.http.routers.http_traefik.middlewares=https_redirect
+
+      - traefik.http.middlewares.https_redirect.redirectscheme.scheme=https
+      - traefik.http.middlewares.https_redirect.redirectscheme.permanent=true
+
+  mysql:
+      image: 'mysql:8.0'
+      restart: always
+      ports:
+        - '3306:3306'
+      env_file: .env
+      environment:
+          MYSQL_ROOT_PASSWORD: '${DB_PASSWORD}'
+      volumes:
+          - 'sidecar_mysql:/var/lib/mysql'
+          - './conf.d/mysql.cnf:/etc/mysql/conf.d/custom.cnf'
+      networks:
+          - development
+
+  redis:
+      image: 'redis:alpine'
+      restart: always
+      ports:
+          - '6379:6379'
+      volumes:
+          - 'sidecar_redis:/data'
+      networks:
+          - development
+
+  mailhog:
+      image: 'mailhog/mailhog:latest'
+      restart: always
+      ports:
+          - 1025:1025
+          - 8025:8025
+      networks:
+          - development
+
+volumes:            
+    sidecar_mysql:
+        driver: local
+    sidecar_redis:
+        driver: local
+
+  # registry:
+  #   env_file: .env
+  #   restart: always
+  #   image: registry:2
+  #   networks:
+  #     - web
+  #   environment:
+  #     REGISTRY_AUTH: htpasswd
+  #     REGISTRY_AUTH_HTPASSWD_PATH: /auth/hub.htpasswd
+  #     REGISTRY_AUTH_HTPASSWD_REALM: Registry Realm
+  #     REGISTRY_HTTP_SECRET: "finuras-registry-secret"
+  #   labels:
+
+  #     - "traefik.http.services.registry.loadbalancer.server.port=5000"
+
+  #     - "traefik.http.routers.registry.rule=Host(`${REGISTRY_HOST}`)"
+  #     - "traefik.http.routers.registry.entrypoints=web"
+
+  #     - "traefik.http.middlewares.registry-websecure.redirectscheme.scheme=https"
+  #     - "traefik.http.middlewares.registry-websecure.redirectscheme.permanent=true"
+  #     - "traefik.http.routers.registry.middlewares=registry-websecure"
+
+  #     - "traefik.http.routers.registry-secure.rule=Host(`${REGISTRY_HOST}`)"
+  #     - "traefik.http.routers.registry-secure.entrypoints=websecure"
+  #     - "traefik.http.routers.registry-secure.tls=true"      
+  #   volumes:
+  #     - registry_data:/var/lib/registry
+  #     - ./hub.htpasswd:/auth/hub.htpasswd
+      
+  # docker-registry-ui:
+  #   image: parabuzzle/craneoperator:latest
+  #   networks:
+  #     - web
+  #   # ports:
+  #   #   - "8086:80"
+  #   environment:
+  #     - REGISTRY_HOST=registry
+  #     - REGISTRY_PORT=5000
+  #     - REGISTRY_PROTOCOL=http
+  #     - REGISTRY_USERNAME=frafin
+  #     - REGISTRY_PASSWORD=DDCBC59A-E1DC-4942-9B48-4A34145989AA
+  #     - SSL_VERIFY=false
+  #     - USERNAME=admin
+  #     - PASSWORD=admin
+  #   restart: always
+  #   depends_on:
+  #     - registry
+  #   labels:
+
+  #     - traefik.http.services.docker-registry-ui.loadbalancer.server.port=80
+  
+  #     - traefik.http.routers.docker-registry-ui-secure.entrypoints=websecure
+  #     - traefik.http.routers.docker-registry-ui-secure.rule=Host(`${ADMIN_HOST}`)
+  #     - traefik.http.routers.docker-registry-ui-secure.tls=true
+  #     - traefik.http.routers.docker-registry-ui-secure.service=docker-registry-ui
+
+  #     - traefik.http.routers.docker-registry-ui.entrypoints=web
+  #     - traefik.http.routers.docker-registry-ui.rule=Host(`${ADMIN_HOST}`)
+  #     - traefik.http.routers.docker-registry-ui.middlewares=https_redirect
+
+  #     - traefik.http.middlewares.https_redirect.redirectscheme.scheme=https
+  #     - traefik.http.middlewares.https_redirect.redirectscheme.permanent=true
+
+  # workbench:
+  #   restart: always
+  #   networks:
+  #     - web
+  #   image: ${WORKBENCH_IMAGE}
+  #   volumes:
+  #     - ~/code/finuras/workbench:/var/www/html
+  #   labels:
+  #     - "traefik.http.services.workbench.loadbalancer.server.port=80"
+
+  #     - "traefik.http.routers.workbench.rule=Host(`${WORKBENCH_HOST}`)"
+  #     - "traefik.http.routers.workbench.entrypoints=web"
+
+  #     - "traefik.http.middlewares.workbench.redirectscheme.scheme=https"
+  #     - "traefik.http.middlewares.workbench.redirectscheme.permanent=true"
+  #     - "traefik.http.routers.workbench.middlewares=registry-websecure"
+
+  #     - "traefik.http.routers.workbench-secure.rule=Host(`${WORKBENCH_HOST}`)"
+  #     - "traefik.http.routers.workbench-secure.entrypoints=websecure"
+  #     - "traefik.http.routers.workbench-secure.tls=true"
+
+

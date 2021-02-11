@@ -1,0 +1,41 @@
+#[client]
+#user     = root
+#password = 123456
+
+[mysqld]
+
+#https://mathiasbynens.be/notes/mysql-utf8mb4
+#https://hackerone.com/reports/2233
+#https://jibai31.wordpress.com/2017/05/04/how-to-choose-your-mysql-encoding-and-collation/
+character-set-client-handshake = FALSE
+character-set-server = utf8mb4
+collation-server = utf8mb4_unicode_ci
+
+#innodb_buffer_pool_size = 3G # (adjust value here, 50%-70% of total RAM)
+#innodb_buffer_pool_chunk_size = 1G
+#innodb_buffer_pool_instances = 3
+
+#innodb_log_file_size = 768M
+#innodb_log_files_in_group = 2
+#innodb_flush_log_at_trx_commit = 1
+#innodb_flush_method = O_DIRECT
+
+#max_binlog_size = 1G
+#log_bin = /usr/local/var/log/mysql-bin.log
+#server-id=master-01
+#binlog-format = 'ROW'
+#expire_logs_days = 14
+
+#query_cache_limit = 1M
+#query_cache_type = 0
+#query_cache_size = 0
+
+#max_connections = 10
+#max_allowed_packet = 100M
+#table_open_cache = 4
+#sort_buffer_size = 64K
+#read_buffer_size = 256K
+#read_rnd_buffer_size = 256K
+#net_buffer_length = 2K
+#thread_stack = 128K
+

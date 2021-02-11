@@ -1,0 +1,15 @@
+[tls]
+    # [tls.options]
+    #     [tls.options.default]
+    #         [tls.options.default.clientAuth]
+    #         # in PEM format. each file can contain multiple CAs.
+    #         caFiles = ["certs/rootCA.cer"]
+    #         clientAuthType = "RequireAndVerifyClientCert"    
+    [tls.stores]
+        [tls.stores.default]
+
+    [[tls.certificates]]
+        # https://gist.github.com/fntlnz/cf14feb5a46b2eda428e000157447309
+        certFile = "/certs/io.test.crt"
+        keyFile = "/certs/io.test.key"
+        stores = ["default"]
